@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Plus, Trash2, Clock, BookOpen, Users, Save, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import AdminNavbar from '../../components/AdminNavbar';
+import API from '../../services/api';
 
 const CreateSpotTest = () => {
   const navigate = useNavigate();
@@ -57,19 +58,48 @@ const CreateSpotTest = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!testDetails.title || !testDetails.duration || !testDetails.batch) {
+      alert("Please fill in Title, Duration, and Batch.");
+      return;
+    }
+
+    if (questions.some(q => !q.text)) {
+      alert("Please fill in all question texts.");
+      return;
+    }
+
     setIsSubmitting(true);
     
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      // Ensure numerical conversion for duration
+      const finalData = {
+        ...testDetails,
+        duration: Number(testDetails.duration),
+        questions: questions.map(q => ({
+          ...q,
+          marks: Number(q.marks)
+        }))
+      };
+
+      const response = await API.post('/tests/create', finalData);
+
+      if (response.data.success) {
+        setSuccess(true);
+        setTimeout(() => {
+          setSuccess(false);
+          navigate('/admin');
+        }, 2000);
+      }
+    } catch (error) {
+      console.error("FULL ERROR OBJECT:", error);
+      const errorMsg = error.response?.data?.message || error.message || "Failed to create test. Check console.";
+      alert(`API Error: ${errorMsg}`);
+    } finally {
       setIsSubmitting(false);
-      setSuccess(true);
-      setTimeout(() => {
-        setSuccess(false);
-        // Reset or navigate
-      }, 3000);
-    }, 1500);
+    }
   };
 
   return (
