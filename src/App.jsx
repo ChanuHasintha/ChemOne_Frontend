@@ -6,6 +6,8 @@ import CreateSpotTest from "./pages/Admin/CreateSpotTest";
 
 import AdminDashboard from "./pages/Admin/AdminDashboard";
 import StudentDashboard from "./pages/Student/StudentDashboard";
+import ViewSpotTest from "./pages/Student/ViewSpotTest";
+import TakeSpotTest from "./pages/Student/TakeSpotTest";
 
 function App() {
   return (
@@ -22,6 +24,8 @@ function App() {
 
         {/* Student Routes */}
         <Route path="/student" element={<StudentDashboard />} />
+        <Route path="/student/spot-test" element={<ViewSpotTest />} />
+        <Route path="/student/spot-test/:id" element={<TakeSpotTest />} />
       </Routes>
     </BrowserRouter>
   );
