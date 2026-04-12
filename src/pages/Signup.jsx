@@ -204,6 +204,10 @@ export default function Signup() {
   const [success, setSuccess] = useState(false);
   const [showPw, setShowPw] = useState(false);
   const [showCpw, setShowCpw] = useState(false);
+  
+  // OTP states
+  const [showOtpStep, setShowOtpStep] = useState(false);
+  const [otp, setOtp] = useState("");
   const [focused, setFocused] = useState("");
 
   const change = (e) => {
@@ -213,7 +217,14 @@ export default function Signup() {
 
   const validate = () => {
     if (!form.name.trim()) return setError("Full name is required.");
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) return setError("Enter a valid email.");
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(form.email)) return setError("Enter a valid real email address.");
+    
+    // Ensure the email is a Google Mail account
+    const emailDomain = form.email.split('@')[1]?.toLowerCase();
+    if (emailDomain !== 'gmail.com') {
+      return setError("Only real Google Mail (@gmail.com) accounts are allowed.");
+    }
     if (form.password.length < 6) return setError("Password must be at least 6 characters.");
     if (form.password !== form.confirmPassword) return setError("Passwords do not match.");
     if (form.role === "student" && !form.batch) return setError("Please select your batch.");
@@ -222,19 +233,36 @@ export default function Signup() {
 
   const submit = async (e) => {
     e.preventDefault();
-    if (!validate()) return;
-    setLoading(true);
     setError("");
-    try {
-      const { confirmPassword, ...payload } = form;
-      await API.post("/auth/register", payload);
-      setSuccess(true);
-      setTimeout(() => navigate("/login"), 2500);
-    } catch (err) {
-      const msg = err.response?.data?.message || err.message || "Server error.";
-      setError(msg);
-    } finally {
-      setLoading(false);
+
+    if (!showOtpStep) {
+      if (!validate()) return;
+      setLoading(true);
+      try {
+        await API.post("/auth/send-signup-otp", { email: form.email });
+        setShowOtpStep(true);
+      } catch (err) {
+        const msg = err.response?.data?.message || err.message || "Failed to send OTP.";
+        setError(msg);
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      if (!otp || otp.length !== 6) {
+        return setError("Please enter a valid 6-digit OTP.");
+      }
+      setLoading(true);
+      try {
+        const { confirmPassword, ...payload } = form;
+        await API.post("/auth/register", { ...payload, otp });
+        setSuccess(true);
+        setTimeout(() => navigate("/login"), 2500);
+      } catch (err) {
+        const msg = err.response?.data?.message || err.message || "Server error.";
+        setError(msg);
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -518,145 +546,195 @@ export default function Signup() {
               </div>
             )}
 
-            <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            {!showOtpStep ? (
+              <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
-              {/* Name */}
-              <Field label="Full Name" icon="◈" mono>
-                <input
-                  className="input-acid"
-                  type="text" name="name"
-                  placeholder="Ravindu Deshan"
-                  value={form.name} onChange={change}
-                  autoComplete="name"
-                />
-              </Field>
-
-              {/* Email */}
-              <Field label="Email Address" icon="◉" mono>
-                <input
-                  className="input-acid"
-                  type="email" name="email"
-                  placeholder="ravi@example.com"
-                  value={form.email} onChange={change}
-                  autoComplete="email"
-                />
-              </Field>
-
-              {/* Passwords side by side */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                <label className="font-mono" style={{ fontSize: 10, fontWeight: 600, letterSpacing: ".14em", textTransform: "uppercase", color: "var(--sub)" }}>
-                  // Password
-                </label>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                  {[
-                    { key: "password", placeholder: "Password", show: showPw, toggle: () => setShowPw(!showPw) },
-                    { key: "confirmPassword", placeholder: "Confirm", show: showCpw, toggle: () => setShowCpw(!showCpw) },
-                  ].map(({ key, placeholder, show, toggle }) => (
-                    <div key={key} style={{ position: "relative" }}>
-                      <span style={{ position: "absolute", left: 13, top: "50%", transform: "translateY(-50%)", fontSize: "0.82rem", opacity: .4, pointerEvents: "none" }}>⬡</span>
-                      <input
-                        className="input-acid"
-                        style={{ paddingRight: 36 }}
-                        type={show ? "text" : "password"}
-                        name={key}
-                        placeholder={placeholder}
-                        value={form[key]}
-                        onChange={change}
-                        autoComplete="new-password"
-                      />
-                      <button
-                        type="button"
-                        onClick={toggle}
-                        style={{
-                          position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)",
-                          background: "none", border: "none", cursor: "pointer",
-                          fontSize: 12, opacity: .35, color: "#fff", padding: 0,
-                          transition: "opacity .15s",
-                        }}
-                        onMouseEnter={e => e.currentTarget.style.opacity = ".75"}
-                        onMouseLeave={e => e.currentTarget.style.opacity = ".35"}
-                      >
-                        {show ? "●" : "○"}
-                      </button>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Strength indicator */}
-                {pw && (
-                  <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 4 }}>
-                    {[1, 2, 3, 4, 5].map(i => (
-                      <div key={i} className="strength-bar"
-                        style={{ background: i <= pw.bars ? pw.color : "var(--muted)" }}
-                      />
-                    ))}
-                    <span className="font-mono" style={{ fontSize: 9, color: pw.color, letterSpacing: ".1em", minWidth: 64, textAlign: "right" }}>
-                      {pw.label}
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              {/* Role & Batch */}
-              <div style={{
-                display: "grid",
-                gridTemplateColumns: form.role === "student" ? "1fr 1fr" : "1fr",
-                gap: 12,
-              }}>
-                <Field label="I Am A…" icon="◇" mono>
-                  <select
+                {/* Name */}
+                <Field label="Full Name" icon="◈" mono>
+                  <input
                     className="input-acid"
-                    style={{ appearance: "none", cursor: "pointer", paddingRight: 32 }}
-                    name="role" value={form.role} onChange={change}
-                  >
-                    <option value="student">Student</option>
-                    <option value="instructor">Instructor</option>
-                  </select>
-                  <span style={{
-                    position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)",
-                    color: "var(--sub)", fontSize: 10, pointerEvents: "none",
-                  }}>▾</span>
+                    type="text" name="name"
+                    placeholder="Ravindu Deshan"
+                    value={form.name} onChange={change}
+                    autoComplete="name"
+                  />
                 </Field>
 
-                {form.role === "student" && (
-                  <Field label="Batch Year" icon="◈" mono>
+                {/* Email */}
+                <Field label="Email Address" icon="◉" mono>
+                  <input
+                    className="input-acid"
+                    type="email" name="email"
+                    placeholder="ravi@gmail.com"
+                    value={form.email} onChange={change}
+                    autoComplete="email"
+                  />
+                </Field>
+
+                {/* Passwords side by side */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  <label className="font-mono" style={{ fontSize: 10, fontWeight: 600, letterSpacing: ".14em", textTransform: "uppercase", color: "var(--sub)" }}>
+                    // Password
+                  </label>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                    {[
+                      { key: "password", placeholder: "Password", show: showPw, toggle: () => setShowPw(!showPw) },
+                      { key: "confirmPassword", placeholder: "Confirm", show: showCpw, toggle: () => setShowCpw(!showCpw) },
+                    ].map(({ key, placeholder, show, toggle }) => (
+                      <div key={key} style={{ position: "relative" }}>
+                        <span style={{ position: "absolute", left: 13, top: "50%", transform: "translateY(-50%)", fontSize: "0.82rem", opacity: .4, pointerEvents: "none" }}>⬡</span>
+                        <input
+                          className="input-acid"
+                          style={{ paddingRight: 36 }}
+                          type={show ? "text" : "password"}
+                          name={key}
+                          placeholder={placeholder}
+                          value={form[key]}
+                          onChange={change}
+                          autoComplete="new-password"
+                        />
+                        <button
+                          type="button"
+                          onClick={toggle}
+                          style={{
+                            position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)",
+                            background: "none", border: "none", cursor: "pointer",
+                            fontSize: 12, opacity: .35, color: "#fff", padding: 0,
+                            transition: "opacity .15s",
+                          }}
+                          onMouseEnter={e => e.currentTarget.style.opacity = ".75"}
+                          onMouseLeave={e => e.currentTarget.style.opacity = ".35"}
+                        >
+                          {show ? "●" : "○"}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Strength indicator */}
+                  {pw && (
+                    <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 4 }}>
+                      {[1, 2, 3, 4, 5].map(i => (
+                        <div key={i} className="strength-bar"
+                          style={{ background: i <= pw.bars ? pw.color : "var(--muted)" }}
+                        />
+                      ))}
+                      <span className="font-mono" style={{ fontSize: 9, color: pw.color, letterSpacing: ".1em", minWidth: 64, textAlign: "right" }}>
+                        {pw.label}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Role & Batch */}
+                <div style={{
+                  display: "grid",
+                  gridTemplateColumns: form.role === "student" ? "1fr 1fr" : "1fr",
+                  gap: 12,
+                }}>
+                  <Field label="I Am A…" icon="◇" mono>
                     <select
                       className="input-acid"
                       style={{ appearance: "none", cursor: "pointer", paddingRight: 32 }}
-                      name="batch" value={form.batch} onChange={change}
+                      name="role" value={form.role} onChange={change}
                     >
-                      <option value="">Select Batch</option>
-                      {[2026, 2027, 2028, 2029, 2030].map(y => (
-                        <option key={y} value={y}>{y}</option>
-                      ))}
+                      <option value="student">Student</option>
+                      <option value="instructor">Instructor</option>
                     </select>
                     <span style={{
                       position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)",
                       color: "var(--sub)", fontSize: 10, pointerEvents: "none",
                     }}>▾</span>
                   </Field>
-                )}
-              </div>
 
-              {/* Submit */}
-              <button
-                type="submit"
-                className="btn-acid"
-                disabled={loading}
-                style={{ marginTop: 6 }}
-              >
-                <span style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, position: "relative", zIndex: 1 }}>
-                  {loading && (
-                    <span className="anim-spin" style={{
-                      display: "inline-block", width: 14, height: 14,
-                      border: "2px solid rgba(0,0,0,0.25)", borderTopColor: "#000",
-                      borderRadius: "50%",
-                    }} />
+                  {form.role === "student" && (
+                    <Field label="Batch Year" icon="◈" mono>
+                      <select
+                        className="input-acid"
+                        style={{ appearance: "none", cursor: "pointer", paddingRight: 32 }}
+                        name="batch" value={form.batch} onChange={change}
+                      >
+                        <option value="">Select Batch</option>
+                        {[2026, 2027, 2028, 2029, 2030].map(y => (
+                          <option key={y} value={y}>{y}</option>
+                        ))}
+                      </select>
+                      <span style={{
+                        position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)",
+                        color: "var(--sub)", fontSize: 10, pointerEvents: "none",
+                      }}>▾</span>
+                    </Field>
                   )}
-                  {loading ? "CREATING ACCOUNT..." : "CREATE ACCOUNT →"}
-                </span>
-              </button>
-            </form>
+                </div>
+
+                {/* Submit */}
+                <button
+                  type="submit"
+                  className="btn-acid"
+                  disabled={loading}
+                  style={{ marginTop: 6 }}
+                >
+                  <span style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, position: "relative", zIndex: 1 }}>
+                    {loading && (
+                      <span className="anim-spin" style={{
+                        display: "inline-block", width: 14, height: 14,
+                        border: "2px solid rgba(0,0,0,0.25)", borderTopColor: "#000",
+                        borderRadius: "50%",
+                      }} />
+                    )}
+                    {loading ? "SENDING VERIFICATION..." : "NEXT STEP →"}
+                  </span>
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={submit} className="anim-fadeslide" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                <div style={{ textAlign: "center", marginBottom: 8, color: "var(--sub)" }}>
+                  <p className="font-mono">We've sent a 6-digit code to</p>
+                  <p className="font-bebas" style={{ fontSize: "1.4rem", color: "var(--acid)", marginTop: 4 }}>{form.email}</p>
+                </div>
+
+                <Field label="Verification Code" icon="⚿" mono>
+                  <input
+                    className="input-acid font-mono"
+                    type="text"
+                    maxLength={6}
+                    placeholder="000000"
+                    value={otp} onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                    style={{ textAlign: "center", fontSize: "1.5rem", letterSpacing: "0.2em", paddingLeft: 14 }}
+                  />
+                </Field>
+
+                <button
+                  type="submit"
+                  className="btn-acid"
+                  disabled={loading || otp.length !== 6}
+                  style={{ marginTop: 6 }}
+                >
+                  <span style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, position: "relative", zIndex: 1 }}>
+                    {loading && (
+                      <span className="anim-spin" style={{
+                        display: "inline-block", width: 14, height: 14,
+                        border: "2px solid rgba(0,0,0,0.25)", borderTopColor: "#000",
+                        borderRadius: "50%",
+                      }} />
+                    )}
+                    {loading ? "VERIFYING & CREATING..." : "VERIFY AND CREATE ACCOUNT →"}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => { setShowOtpStep(false); setOtp(""); setError(""); }}
+                  style={{
+                    background: "none", border: "none", color: "var(--sub)",
+                    fontFamily: "'JetBrains Mono', monospace", fontSize: 11, cursor: "pointer",
+                    textDecoration: "underline", marginTop: 8
+                  }}
+                >
+                  ← Go back to change details
+                </button>
+              </form>
+            )}
 
             {/* Divider */}
             <div style={{
