@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import AdminNavbar from "../../components/AdminNavbar";
 import API from "../../services/api";
+import { useNavigate } from "react-router-dom";
 
 const ManageStudents = () => {
+    const navigate = useNavigate();
     const [students, setStudents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
@@ -53,6 +55,15 @@ const ManageStudents = () => {
                         </div>
                         <h1 className="text-3xl font-bold text-slate-900">Registered Students</h1>
                         <p className="text-slate-500 mt-2 text-lg">View and search for registered student details.</p>
+                        <button
+                            onClick={() => navigate("/signup")}
+                            className="mt-4 inline-flex items-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-2xl hover:bg-blue-700 transition-all shadow-md hover:shadow-lg active:scale-95"
+                        >
+                            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                            </svg>
+                            Create New Account
+                        </button>
                     </div>
 
                     <div className="w-full md:w-96 relative">

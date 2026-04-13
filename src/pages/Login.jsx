@@ -172,8 +172,6 @@ function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [isAdminLogin, setIsAdminLogin] = useState(false);
-  const [secretKey, setSecretKey] = useState("");
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -184,12 +182,6 @@ function Login() {
     e.preventDefault();
     setLoading(true);
     setError("");
-
-    if (isAdminLogin && secretKey !== "SecretKey") {
-      setError("Invalid secret key for admin login.");
-      setLoading(false);
-      return;
-    }
 
     try {
       const res = await API.post("/auth/login", formData);
@@ -436,47 +428,6 @@ function Login() {
                 </button>
               </Field>
 
-              {/* Admin toggle */}
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <input
-                  type="checkbox"
-                  id="adminToggle"
-                  className="checkbox-acid"
-                  checked={isAdminLogin}
-                  onChange={(e) => {
-                    setIsAdminLogin(e.target.checked);
-                    if (error) setError("");
-                  }}
-                />
-                <label
-                  htmlFor="adminToggle"
-                  className="font-mono"
-                  style={{ fontSize: 11, color: "var(--sub)", cursor: "pointer", letterSpacing: ".08em", userSelect: "none" }}
-                >
-                  // login as administrator
-                </label>
-              </div>
-
-              {/* Secret key */}
-              {isAdminLogin && (
-                <div className="anim-reveal">
-                  <Field label="Secret Key" icon="◈">
-                    <input
-                      className="input-acid"
-                      type="password"
-                      placeholder="Enter admin secret key"
-                      value={secretKey}
-                      onChange={(e) => {
-                        setSecretKey(e.target.value);
-                        if (error) setError("");
-                      }}
-                      autoComplete="off"
-                      required={isAdminLogin}
-                    />
-                  </Field>
-                </div>
-              )}
-
               {/* Submit */}
               <button
                 type="submit"
@@ -510,22 +461,11 @@ function Login() {
             {/* Links */}
             <div style={{ display: "flex", flexDirection: "column", gap: 10, alignItems: "center" }}>
               <p style={{ color: "var(--sub)", fontSize: 13, margin: 0 }}>
-                Don't have an account?{" "}
-                <span
-                  onClick={() => navigate("/signup")}
-                  style={{ color: "var(--acid)", cursor: "pointer", fontWeight: 600, transition: "opacity .15s" }}
-                  onMouseEnter={e => e.currentTarget.style.opacity = ".7"}
-                  onMouseLeave={e => e.currentTarget.style.opacity = "1"}
-                >
-                  Create Account ↗
-                </span>
-              </p>
-              <p style={{ color: "var(--sub)", fontSize: 13, margin: 0 }}>
                 Forgot password?{" "}
                 <span
                   onClick={() => navigate("/forgot-password")}
                   style={{ color: "var(--sub)", cursor: "pointer", fontWeight: 500, transition: "color .15s", textDecoration: "underline", textDecorationColor: "var(--muted)" }}
-                  onMouseEnter={e => e.currentTarget.style.color = "#888"}
+                  onMouseEnter={e => e.currentTarget.style.color = "#c6e077ff"}
                   onMouseLeave={e => e.currentTarget.style.color = "var(--sub)"}
                 >
                   Reset Password ↗
@@ -535,7 +475,7 @@ function Login() {
 
             {/* Footer */}
             <p className="font-mono" style={{ textAlign: "center", color: "#222", fontSize: 10, marginTop: 20, letterSpacing: ".08em" }}>
-              © 2026 CHEMONE — ALL RIGHTS RESERVED
+              © 2026 ChemBridge  — ALL RIGHTS RESERVED
             </p>
           </div>
         </div>
