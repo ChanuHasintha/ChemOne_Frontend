@@ -51,11 +51,9 @@ const ManageDailyWorksheet = () => {
         }
     };
 
+    // GCS public URLs work directly for both view and download
     const getDownloadUrl = (url) => {
         if (!url) return "#";
-        if (url.includes("cloudinary.com") && url.includes("/upload/")) {
-            return url.replace("/upload/", "/upload/fl_attachment/");
-        }
         return url;
     };
 
@@ -172,16 +170,7 @@ const ManageDailyWorksheet = () => {
                                                 </svg>
                                                 View
                                             </a>
-                                            <a
-                                                href={getDownloadUrl(ws.fileUrl)}
-                                                download={ws.fileName || "worksheet.pdf"}
-                                                className="flex-1 bg-blue-600 text-white font-semibold py-3 px-2 rounded-xl text-center hover:bg-blue-700 active:scale-95 transition-all shadow-md hover:shadow-blue-500/25 flex items-center justify-center gap-1 text-sm"
-                                            >
-                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                                </svg>
-                                                Download
-                                            </a>
+
                                             <button
                                                 onClick={() => handleDelete(ws._id)}
                                                 className="w-10 flex-shrink-0 bg-white border border-red-100 text-red-500 hover:bg-red-50 hover:border-red-200 disabled:opacity-50 font-semibold py-3 flex items-center justify-center rounded-xl active:scale-95 transition-all"
