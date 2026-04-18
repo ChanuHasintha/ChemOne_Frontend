@@ -14,11 +14,11 @@ const Dailyworksheet = () => {
     const [confirmingId, setConfirmingId] = useState(null);
 
     // Modal state
-    const [modal, setModal] = useState({ 
-        isOpen: false, 
-        title: '', 
-        message: '', 
-        onConfirm: () => {},
+    const [modal, setModal] = useState({
+        isOpen: false,
+        title: '',
+        message: '',
+        onConfirm: () => { },
         type: 'danger'
     });
 
@@ -108,7 +108,7 @@ const Dailyworksheet = () => {
 
     const now = new Date();
     const currentHour = now.getHours();
-    const isWithinTimeRange = currentHour >= 1 && currentHour < 23;
+    const isWithinTimeRange = currentHour >= 0 && currentHour < 23.59;
     const todayStr = new Date().toISOString().split("T")[0];
 
     // Fetch Worksheets
@@ -211,7 +211,7 @@ const Dailyworksheet = () => {
                         </div>
                         <h3 className="text-xl font-bold text-slate-900 mb-2">Outside Available Hours</h3>
                         <p className="text-slate-500 max-w-sm mx-auto">
-                            The daily worksheet is only available between <span className="font-semibold text-slate-700">4:00 AM</span> and <span className="font-semibold text-slate-700">11:00 PM</span>.
+                            The daily worksheet is only available between <span className="font-semibold text-slate-700">4:00 AM</span> and <span className="font-semibold text-slate-700">11:59 PM</span>.
                         </p>
                     </div>
                 ) : (
@@ -393,7 +393,7 @@ const Dailyworksheet = () => {
                 )}
             </div>
 
-            <ConfirmationModal 
+            <ConfirmationModal
                 isOpen={modal.isOpen}
                 onClose={closeModal}
                 onConfirm={modal.onConfirm}
