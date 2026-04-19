@@ -15,6 +15,7 @@ import ManageStudents from "./pages/Admin/ManageStudents";
 import ManageResults from "./pages/Admin/ManageResults";
 import Dailyworksheet from "./pages/Student/Dailyworksheet";
 import ViewPhysicalResults from "./pages/Student/ViewPhysicalResults";
+import ChatWithAI from "./pages/Admin/ChatWithAI";
 import { Toaster } from 'react-hot-toast';
 
 function App() {
@@ -30,6 +31,7 @@ function App() {
         <Route path="/settings" element={<Settings />} />
 
         <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/admin/chat-with-ai" element={<ChatWithAI />} />
         <Route path="/admin/spot-test/create" element={<CreateSpotTest />} />
         <Route path="/admin/spot-test/edit/:id" element={<CreateSpotTest />} />
         <Route path="/admin/daily-worksheet" element={<DailyWorksheet />} />
@@ -37,12 +39,14 @@ function App() {
         <Route path="/admin/manage-daily-worksheet" element={<ManageDailyWorksheet />} />
         <Route path="/admin/students" element={<ManageStudents />} />
         <Route path="/admin/manage-results" element={<ManageResults />} />
+       
 
         <Route path="/student" element={<StudentDashboard />} />
         <Route path="/student/spot-test" element={<ViewSpotTest />} />
         <Route path="/student/spot-test/:id" element={<TakeSpotTest />} />
         <Route path="/student/daily-worksheet" element={<Dailyworksheet />} />
         <Route path="/student/results" element={<ViewPhysicalResults />} />
+        
       </Routes>
     </BrowserRouter>
   );
