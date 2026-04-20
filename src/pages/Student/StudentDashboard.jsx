@@ -1,10 +1,20 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ClipboardList, Users, Settings, Award } from 'lucide-react';
+import { ClipboardList, Users, Settings, Award, Joystick } from 'lucide-react';
 import StudentNavbar from '../../components/StudentNavbar';
 
 const StudentDashboard = () => {
   const navigate = useNavigate();
+  const [userRole, setUserRole] = useState(null);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        setUserRole(JSON.parse(storedUser).role);
+      } catch (e) { }
+    }
+  }, []);
 
   const dashboardCards = [
     {
@@ -26,10 +36,10 @@ const StudentDashboard = () => {
       iconColor: 'text-emerald-600'
     },
     {
-      title: 'Physical Exam Results',
-      description: 'View your leaderboard rankings and performance in class exams',
+      title: 'Physical Results',
+      description: 'View your class exam history and leaderboard rankings',
       icon: Award,
-      onClick: () => navigate('/student/results'),
+      onClick: () => navigate('/student/view-physical-results'),
       color: 'from-rose-500 to-rose-600',
       iconBg: 'bg-rose-100',
       iconColor: 'text-rose-600'
@@ -51,8 +61,24 @@ const StudentDashboard = () => {
       color: 'from-slate-500 to-gray-600',
       iconBg: 'bg-slate-100 dark:bg-slate-800',
       iconColor: 'text-slate-600 dark:text-slate-400'
+    },
+    {
+      title: 'Mind Relaxing',
+      description: 'Relax your mind',
+      icon: Joystick,
+      onClick: () => navigate('/student/games'),
+      color: 'from-yellow-500 to-yellow-600',
+      iconBg: 'bg-yellow-100 dark:bg-yellow-800',
+      iconColor: 'text-yellow-600 dark:text-yellow-400'
     }
   ];
+
+  const filteredCards = dashboardCards.filter(card => {
+    if (userRole === 'guest') {
+      return !['View Spot Tests', 'Daily Worksheet', 'Physical Exam Results', 'Settings'].includes(card.title);
+    }
+    return true;
+  });
 
   return (
     <div className="min-h-screen bg-blue-50 dark:bg-slate-900">
@@ -79,7 +105,7 @@ const StudentDashboard = () => {
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">Quick Actions</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {dashboardCards.map((card, index) => {
+            {filteredCards.map((card, index) => {
               const Icon = card.icon;
               return (
                 <div

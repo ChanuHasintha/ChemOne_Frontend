@@ -12,6 +12,12 @@ const ManageSpotTest = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
+    const [currentTime, setCurrentTime] = useState(new Date());
+
+    useEffect(() => {
+        const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+        return () => clearInterval(timer);
+    }, []);
 
     // Results view state
     const [selectedTest, setSelectedTest] = useState(null);
@@ -73,7 +79,7 @@ const ManageSpotTest = () => {
         try {
             const response = await API.patch(`/tests/${id}/publish`, { isPublished: !currentStatus });
             if (response.data.success) {
-                setTests(prev => prev.map(t => t._id === id ? { ...t, isPublished: !currentStatus } : t));
+                setTests(prev => prev.map(t => t._id === id ? { ...t, isPublished: !currentStatus, publishedAt: !currentStatus ? new Date().toISOString() : null } : t));
                 toast.success(`Assessment ${!currentStatus ? 'is now live' : 'hidden from students'}.`, { id: toggleToast });
             }
         } catch (error) {
@@ -98,6 +104,15 @@ const ManageSpotTest = () => {
         } finally {
             setLoadingSubmissions(false);
         }
+    };
+
+    const getRemainingTime = (publishedAt, durationMins) => {
+        if (!publishedAt) return null;
+        const publishedTime = new Date(publishedAt).getTime();
+        const endTime = publishedTime + durationMins * 60 * 1000;
+        const now = currentTime.getTime();
+        const timeLeft = Math.max(0, endTime - now);
+        return Math.floor(timeLeft / 1000);
     };
 
     const formatDuration = (seconds) => {
@@ -231,7 +246,15 @@ const ManageSpotTest = () => {
                                     <div className="flex items-center gap-4 text-sm font-bold text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl">
                                         <div className="flex items-center gap-2">
                                             <Clock className="h-4 w-4 text-indigo-500" />
-                                            <span>{test.duration} MIN</span>
+                                            {test.isPublished && test.publishedAt ? (
+                                                <span className={`${getRemainingTime(test.publishedAt, test.duration) <= 60 && getRemainingTime(test.publishedAt, test.duration) > 0 ? 'text-red-500 animate-pulse' : 'text-indigo-600'} font-mono font-black`}>
+                                                    {getRemainingTime(test.publishedAt, test.duration) > 0 
+                                                        ? formatDuration(getRemainingTime(test.publishedAt, test.duration)) 
+                                                        : 'TIME UP'}
+                                                </span>
+                                            ) : (
+                                                <span>{test.duration} MIN</span>
+                                            )}
                                         </div>
                                         <div className="h-1 w-1 bg-slate-300 rounded-full"></div>
                                         <div className="flex items-center gap-2">

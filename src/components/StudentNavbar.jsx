@@ -1,15 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, FileEdit, Settings, LogOut, Beaker, FileText } from 'lucide-react';
+import { LayoutDashboard, FileEdit, Settings, LogOut, Beaker, FileText, Info } from 'lucide-react';
 
 const StudentNavbar = () => {
     const navigate = useNavigate();
     const location = useLocation();
 
     const [isDarkMode, setIsDarkMode] = useState(false);
+    const [userRole, setUserRole] = useState(null);
 
     useEffect(() => {
         setIsDarkMode(document.documentElement.classList.contains("dark"));
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+            try {
+                setUserRole(JSON.parse(storedUser).role);
+            } catch (e) { }
+        }
     }, []);
 
     const toggleDarkMode = () => {
@@ -30,13 +37,20 @@ const StudentNavbar = () => {
         navigate('/login');
     };
 
-    const navItems = [
+    const allNavItems = [
         { name: 'Dashboard', path: '/student', icon: LayoutDashboard },
         { name: 'Spot Test', path: '/student/spot-test', icon: FileEdit },
         { name: 'Daily Worksheet', path: '/student/daily-worksheet', icon: FileText },
         { name: 'Settings', path: '/settings', icon: Settings },
-
+        { name: 'About', path: '/student/about', icon: Info },
     ];
+
+    const navItems = allNavItems.filter(item => {
+        if (userRole === 'guest') {
+            return item.name !== 'Spot Test' && item.name !== 'Daily Worksheet' && item.name !== 'Results' && item.name !== 'Settings';
+        }
+        return true;
+    });
 
     return (
         <nav className="bg-slate-950 border-b border-slate-800 sticky top-0 z-50">

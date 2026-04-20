@@ -199,6 +199,12 @@ function Login() {
     }
   };
 
+  const handleGuestLogin = () => {
+    localStorage.setItem("token", "guest-token");
+    localStorage.setItem("user", JSON.stringify({ name: "Guest User", role: "guest", email: "guest@chembridge.com" }));
+    navigate("/student");
+  };
+
   return (
     <>
       <style>{KEYFRAMES}</style>
@@ -457,6 +463,15 @@ function Login() {
               <span className="font-mono" style={{ fontSize: 10, letterSpacing: ".1em" }}>OR</span>
               <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
             </div>
+
+            <button
+              type="button"
+              onClick={handleGuestLogin}
+              className="btn-acid"
+              style={{ background: "transparent", color: "var(--acid)", border: "1px solid var(--acid)", marginBottom: 16 }}
+            >
+              <span style={{ position: "relative", zIndex: 1 }}>LOGIN AS GUEST →</span>
+            </button>
 
             {/* Links */}
             <div style={{ display: "flex", flexDirection: "column", gap: 10, alignItems: "center" }}>

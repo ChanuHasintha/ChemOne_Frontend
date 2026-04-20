@@ -16,8 +16,18 @@ import ManageResults from "./pages/Admin/ManageResults";
 import Dailyworksheet from "./pages/Student/Dailyworksheet";
 import ViewPhysicalResults from "./pages/Student/ViewPhysicalResults";
 import ChatBot from "./pages/Student/ChatBot";
+import About from "./pages/Student/About";
+import Games from "./pages/Student/Games";
 import { Toaster } from 'react-hot-toast';
 import { useEffect } from 'react';
+
+const GuestRestrictRoute = ({ children }) => {
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  if (user.role === 'guest') {
+    return <Navigate to="/student" replace />;
+  }
+  return children;
+};
 
 function App() {
   useEffect(() => {
@@ -37,7 +47,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
 
-        <Route path="/settings" element={<Settings />} />
+        <Route path="/settings" element={<GuestRestrictRoute><Settings /></GuestRestrictRoute>} />
 
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/admin/spot-test/create" element={<CreateSpotTest />} />
@@ -49,11 +59,13 @@ function App() {
         <Route path="/admin/manage-results" element={<ManageResults />} />
 
         <Route path="/student" element={<StudentDashboard />} />
-        <Route path="/student/spot-test" element={<ViewSpotTest />} />
-        <Route path="/student/spot-test/:id" element={<TakeSpotTest />} />
-        <Route path="/student/daily-worksheet" element={<Dailyworksheet />} />
-        <Route path="/student/results" element={<ViewPhysicalResults />} />
+        <Route path="/student/spot-test" element={<GuestRestrictRoute><ViewSpotTest /></GuestRestrictRoute>} />
+        <Route path="/student/spot-test/:id" element={<GuestRestrictRoute><TakeSpotTest /></GuestRestrictRoute>} />
+        <Route path="/student/daily-worksheet" element={<GuestRestrictRoute><Dailyworksheet /></GuestRestrictRoute>} />
+        <Route path="/student/view-physical-results" element={<GuestRestrictRoute><ViewPhysicalResults /></GuestRestrictRoute>} />
         <Route path="/student/ai-chatbot" element={<ChatBot />} />
+        <Route path="/student/about" element={<About />} />
+        <Route path="/student/games" element={<Games />} />
       </Routes>
     </BrowserRouter>
   );
