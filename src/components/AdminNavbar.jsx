@@ -47,7 +47,7 @@ const AdminNavbar = () => {
             {/* Logo */}
             <div className="flex-shrink-0 flex items-center cursor-pointer transition-transform hover:scale-105" onClick={() => navigate('/admin')}>
               <div className="w-9 h-9 rounded-xl bg-acid flex items-center justify-center shadow-lg shadow-acid/20">
-                <Beaker className="w-5 h-5 text-black" />
+                <img src="/logo.png" alt="ChemOne Logo" />
               </div>
               <span className="ml-3 font-bebas text-xl sm:text-2xl text-white tracking-wider whitespace-nowrap">
                 ChemBridge <span className="text-acid">ADMIN</span>

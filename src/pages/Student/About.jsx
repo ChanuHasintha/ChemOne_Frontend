@@ -66,7 +66,7 @@ const About = () => {
     ];
 
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans">
+        <div className="min-h-screen bg-blue-50 dark:bg-slate-950 font-sans">
             <StudentNavbar />
 
             {/* Hero Section */}
@@ -95,9 +95,9 @@ const About = () => {
                     <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-8 shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 transition-all hover:shadow-2xl">
                         <div className="flex flex-col items-center sm:flex-row sm:items-start gap-8">
                             <div className="relative group">
-                                <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded-3xl blur-md opacity-25 group-hover:opacity-40 transition-opacity duration-300"></div>
+                                <div className="absolute inset-0 bg-indigo-600 rounded-3xl blur-md opacity-25 group-hover:opacity-40 transition-opacity duration-300 dark:bg-white"></div>
                                 <img
-                                    src="/ashan.jpeg"
+                                    src="/logo.png"
                                     alt="Founder/Instructor"
                                     className="relative w-48 h-48 object-cover rounded-3xl shadow-lg border-4 border-white dark:border-slate-800 group-hover:-translate-y-1 transition-transform duration-300"
                                 />
