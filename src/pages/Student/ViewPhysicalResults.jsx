@@ -17,7 +17,7 @@ const ViewPhysicalResults = () => {
     const [historyLoading, setHistoryLoading] = useState(true);
 
     // Tabs
-    const [activeTab, setActiveTab] = useState("history"); // "history" or "leaderboard"
+    const [activeTab, setActiveTab] = useState("history");
 
     useEffect(() => {
         const user = JSON.parse(localStorage.getItem('user'));
@@ -88,7 +88,7 @@ const ViewPhysicalResults = () => {
 
     const selectedExam = exams.find(e => e._id === selectedExamId);
     const myResult = results.find(r => r.student._id === currentUser?.id);
-    const myRank = results.findIndex(r => r.student._id === currentUser?.id) + 1;
+    const myRank = results.findIndex(r => r.student?._id === currentUser?.id) + 1;
 
     // Compute performance stats from history
     const performanceStats = useMemo(() => {
@@ -122,7 +122,7 @@ const ViewPhysicalResults = () => {
         return [...performanceStats.scores].reverse().slice(-8); // Last 8 exams, chronological
     }, [performanceStats]);
 
-    const maxChartPercentage = chartData.length > 0 ? Math.max(...chartData.map(d => d.percentage)) : 100;
+
 
     return (
         <div className="min-h-screen bg-blue-50 dark:bg-black ">

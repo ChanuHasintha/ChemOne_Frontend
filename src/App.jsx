@@ -15,9 +15,13 @@ import ManageStudents from "./pages/Admin/ManageStudents";
 import ManageResults from "./pages/Admin/ManageResults";
 import Dailyworksheet from "./pages/Student/Dailyworksheet";
 import ViewPhysicalResults from "./pages/Student/ViewPhysicalResults";
+import ChatWithAI from "./pages/Admin/ChatWithAI";
+import ManageKnowledge from "./pages/Admin/ManageKnowledge";
+import AIChatbot from "./pages/Student/AIChatbot";
+import About from "./pages/Student/About"
+import Games from "./pages/Student/Games"
 import { Toaster } from 'react-hot-toast';
 import { useEffect } from 'react';
-//import VesakDecorations from "./components/VesakDecorations";
 
 const GuestRestrictRoute = ({ children }) => {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -38,6 +42,7 @@ function App() {
 
   return (
     <BrowserRouter>
+      <Toaster position="top-center" reverseOrder={false} />
       {/*<VesakDecorations />*/}
       <Routes>
         <Route path="/" element={<Navigate to="/login" replace />} />
@@ -63,6 +68,9 @@ function App() {
         <Route path="/student/spot-test/:id" element={<TakeSpotTest />} />
         <Route path="/student/daily-worksheet" element={<Dailyworksheet />} />
         <Route path="/student/results" element={<ViewPhysicalResults />} />
+        <Route path="/student/ai-chatbot" element={<AIChatbot />} />
+        <Route path="/student/about" element={<About />} />
+        <Route path="/student/games" element={<Games />} />
       </Routes>
     </BrowserRouter>
   );

@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ClipboardList, Users, BarChart3, Settings, FileText, Bell } from 'lucide-react';
+import { ClipboardList, Users, BarChart3, Settings, FileText, Bell, BookOpen, ArrowRight } from 'lucide-react';
 import AdminNavbar from '../../components/AdminNavbar';
 
 
@@ -93,6 +93,24 @@ const AdminDashboard = () => {
       accent: '#f43f5e',
       glowColor: 'rgba(244,63,94,0.25)',
       tag: 'Results',
+    },
+    {
+      title: 'Chat with AI',
+      description: 'Get instant answers and help from the ChemOne AI assistant',
+      icon: Bell,
+      onClick: () => navigate('/admin/chat-with-ai'),
+      accent: '#c8f230',
+      glowColor: 'rgba(200,242,48,0.25)',
+      tag: 'AI',
+    },
+    {
+      title: 'Manage Knowledge',
+      description: 'Upload and manage PDF documents for AI training',
+      icon: FileText,
+      onClick: () => navigate('/admin/manage-knowledge'),
+      accent: '#00d2ff',
+      glowColor: 'rgba(0,210,255,0.25)',
+      tag: 'Knowledge',
     },
     {
       title: 'Settings',

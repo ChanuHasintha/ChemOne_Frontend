@@ -106,7 +106,7 @@ const StudentDashboard = () => {
       title: 'Physical Results',
       description: 'View class exam history and leaderboard rankings',
       icon: Award,
-      onClick: () => navigate('/student/view-physical-results'),
+      onClick: () => navigate('/student/results'),
       accent: '#f43f5e',
       glowColor: 'rgba(244,63,94,0.25)',
       tag: 'Results',

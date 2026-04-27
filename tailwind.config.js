@@ -51,9 +51,15 @@ export default {
         'float-up': 'floatUp 12s linear infinite',
         'lantern-sway': 'lanternSway 3s ease-in-out infinite',
         'vesak-glow': 'vesakGlow 2.5s ease-in-out infinite',
+        'bubble': 'bubble 6s ease-in infinite',
       },
 
       keyframes: {
+        bubble: {
+          '0%': { transform: 'translateY(100vh) scale(0.5)', opacity: '0' },
+          '50%': { opacity: '0.8' },
+          '100%': { transform: 'translateY(-20vh) scale(1.2)', opacity: '0' },
+        },
         scanline: {
           '0%': { transform: 'translateY(-100%)' },
           '100%': { transform: 'translateY(100vh)' },

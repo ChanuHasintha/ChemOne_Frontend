@@ -36,8 +36,6 @@ function Field({ label, icon, children, mono }) {
   );
 }
 
-const TICKER_ITEMS = ["CHEMISTRY", "A/L", "ASHAN UMAYANGA", "Best Educator", "ChemBridge", "CHEMISTRY", "A/L", "ASHAN UMAYANGA", "Best Educator", "ChemBridge"];
-
 export default function Signup() {
   const navigate = useNavigate();
   const [form, setForm] = useState({
@@ -48,7 +46,7 @@ export default function Signup() {
   const [success, setSuccess] = useState(false);
   const [showPw, setShowPw] = useState(false);
   const [showCpw, setShowCpw] = useState(false);
-  
+
 
 
   const change = (e) => {
@@ -60,7 +58,7 @@ export default function Signup() {
     if (!form.name.trim()) return setError("Full name is required.");
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     if (!emailRegex.test(form.email)) return setError("Enter a valid real email address.");
-    
+
     // Ensure the email is a Google Mail account
     const emailDomain = form.email.split('@')[1]?.toLowerCase();
     if (emailDomain !== 'gmail.com') {
@@ -75,7 +73,7 @@ export default function Signup() {
   const submit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
-    
+
     setLoading(true);
     setError("");
     try {
@@ -142,7 +140,7 @@ export default function Signup() {
 
       {/* Card */}
       <div className="animate-fade-slide relative z-10 w-full max-w-[920px] h-full max-h-[calc(100vh-32px)] rounded-2xl border border-white/10 overflow-hidden flex shadow-[0_40px_120px_rgba(0,0,0,0.7),inset_0_1px_0_rgba(255,255,255,0.05)]">
-        
+
         {/* LEFT PANEL */}
         <div className="hidden md:flex w-[44%] flex-col bg-[#0d0d0d] border-r border-white/10 relative overflow-hidden">
           {/* Grid lines */}
@@ -201,15 +199,6 @@ export default function Signup() {
 
         {/* RIGHT PANEL */}
         <div className="flex-1 flex flex-col justify-center p-10 bg-ink/85 backdrop-blur-[20px] h-full overflow-y-auto">
-          {/* Ticker */}
-          <div className="mb-8 overflow-hidden border-y border-white/10 py-1.5 -mx-10 px-10 ticker-wrap">
-            <div className="animate-ticker font-bebas text-[0.72rem] tracking-[0.15em] text-sub gap-0">
-              {TICKER_ITEMS.concat(TICKER_ITEMS).map((t, i) => (
-                <span key={i} className="pr-8 inline-block">{t}</span>
-              ))}
-            </div>
-          </div>
-
           {/* Header */}
           <div className="mb-7">
             <div className="flex items-baseline gap-3 mb-1.5">

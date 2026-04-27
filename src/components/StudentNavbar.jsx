@@ -43,12 +43,13 @@ const StudentNavbar = () => {
         { name: 'Spot Test', path: '/student/spot-test', icon: FileEdit },
         { name: 'Daily Worksheet', path: '/student/daily-worksheet', icon: FileText },
         { name: 'Settings', path: '/settings', icon: Settings },
+        { name: 'Results', path: '/student/results', icon: Beaker },
         { name: 'About', path: '/student/about', icon: Info },
     ];
 
     const navItems = allNavItems.filter(item => {
         if (userRole === 'guest') {
-            return item.name !== 'Spot Test' && item.name !== 'Daily Worksheet' && item.name !== 'Results' && item.name !== 'Settings';
+            return !['Spot Test', 'Daily Worksheet', 'Results', 'Settings'].includes(item.name);
         }
         return true;
     });
