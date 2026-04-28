@@ -114,7 +114,7 @@ export default function Login() {
         </div>
 
         {/* RIGHT PANEL */}
-        <div className="flex-1 flex flex-col justify-center p-10 bg-ink/85 backdrop-blur-[20px] h-full overflow-y-auto">
+        <div className="flex-1 flex flex-col justify-center p-6 sm:p-10 bg-ink/85 backdrop-blur-[20px] h-full overflow-y-auto">
 
 
           <div className="mb-7">

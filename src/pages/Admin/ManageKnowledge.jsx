@@ -135,7 +135,7 @@ const ManageKnowledge = () => {
 
         {/* Upload Section */}
         <div 
-          className={`relative border-2 border-dashed rounded-2xl p-12 text-center transition-all ${
+          className={`relative border-2 border-dashed rounded-2xl p-6 sm:p-12 text-center transition-all ${
             dragActive ? "border-indigo-500 bg-indigo-50" : "border-gray-300 bg-white"
           } mb-8`}
           onDragEnter={handleDrag}

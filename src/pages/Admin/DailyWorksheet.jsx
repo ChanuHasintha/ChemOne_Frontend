@@ -165,11 +165,11 @@ const DailyWorksheet = () => {
         <div className="min-h-screen bg-blue-50 dark:bg-slate-950">
             <AdminNavbar />
 
-            <div className="min-h-screen bg-blue-50 dark:bg-slate-950 flex justify-center p-6">
-                <div className="bg-white dark:bg-slate-900/70 backdrop-blur-xl rounded-3xl w-full max-w-2xl shadow-2xl border border-white/50">
+            <div className="min-h-screen bg-blue-50 dark:bg-slate-950 flex justify-center p-4 sm:p-6">
+                <div className="bg-white dark:bg-slate-900/70 backdrop-blur-xl rounded-2xl sm:rounded-3xl w-full max-w-2xl shadow-2xl border border-white/50">
 
                     {/* HEADER */}
-                    <div className="p-8 border-b border-slate-200/50 bg-white rounded-t-3xl dark:bg-black">
+                    <div className="p-6 sm:p-8 border-b border-slate-200/50 bg-white rounded-t-2xl sm:rounded-t-3xl dark:bg-black">
                         <div className="flex items-center gap-3 mb-2">
                             <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
                                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -187,7 +187,7 @@ const DailyWorksheet = () => {
                         </div>
                     </div>
 
-                    <div className="p-8 space-y-6">
+                    <div className="p-6 sm:p-8 space-y-6">
 
                         {/* ERROR */}
                         {error && (
