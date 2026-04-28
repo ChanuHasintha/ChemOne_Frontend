@@ -1,5 +1,6 @@
 import { useState } from "react";
-import API from "../services/api";
+import axios from "axios";
+import { API } from "../services/api";
 import { useNavigate } from "react-router-dom";
 
 
@@ -36,7 +37,7 @@ export default function Login() {
     setError("");
 
     try {
-      const res = await API.post("/auth/login", formData);
+      const res = await axios.post(`${API}/api/auth/login`, formData);
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
       if (res.data.user.role === "instructor") {
