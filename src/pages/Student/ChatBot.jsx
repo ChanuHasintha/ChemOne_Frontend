@@ -45,6 +45,12 @@ const getTokens = (dark) => ({
   // scrollbar
   scrollThumb: dark ? "#333333" : "#cbd5e1",
   scrollTrack: dark ? "transparent" : "transparent",
+  // model selector
+  toggleBg: dark ? "#1a1a1a" : "#e2e8f0",
+  toggleBorder: dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)",
+  toggleActiveBg: dark ? "#c8f230" : "#6366f1",
+  toggleActiveText: dark ? "#0a0a0a" : "#ffffff",
+  toggleInactiveText: dark ? "#888888" : "#64748b",
 });
 
 const defaultMessages = [{ role: "ai", text: "Hello 👋.., How Can I Help You ....😊" }];
@@ -71,6 +77,7 @@ const ChatBot = () => {
 
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [selectedModel, setSelectedModel] = useState("gemini");
   const [isDark, setIsDark] = useState(
     () => document.documentElement.classList.contains("dark")
   );
@@ -113,7 +120,7 @@ const ChatBot = () => {
 
     const userMessage = { role: "user", text: input };
     const currentInput = input;
-    
+
     setInput("");
     setLoading(true);
 
@@ -148,11 +155,13 @@ const ChatBot = () => {
     try {
       const res = await API.post("/chat", {
         message: currentInput,
+        model: selectedModel,
       });
 
       const aiMessage = {
         role: "ai",
         text: res.data.reply,
+        model: res.data.model || selectedModel,
       };
 
       setChats(prev => {
@@ -349,7 +358,7 @@ const ChatBot = () => {
 
       {/* Main Container */}
       <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
-        
+
         {/* Sidebar */}
         <div
           className="chat-scrollbar"
@@ -394,11 +403,11 @@ const ChatBot = () => {
               + New Chat
             </button>
 
-            <div style={{ 
-              display: "flex", 
-              alignItems: "center", 
+            <div style={{
+              display: "flex",
+              alignItems: "center",
               color: isDark ? "#ffffff" : "#0f172a",
-              fontWeight: 600, 
+              fontWeight: 600,
               fontSize: "0.9rem",
               marginBottom: "1rem",
               fontFamily: "'Space Grotesk', sans-serif",
@@ -441,12 +450,12 @@ const ChatBot = () => {
                   {c.title}
                 </div>
               ))}
-              
+
               {chats.length === 0 && (
-                <div style={{ 
-                  color: t.headerSub, 
-                  fontSize: "0.8rem", 
-                  textAlign: "center", 
+                <div style={{
+                  color: t.headerSub,
+                  fontSize: "0.8rem",
+                  textAlign: "center",
                   marginTop: "1rem",
                   fontFamily: "'Space Grotesk', sans-serif",
                 }}>
@@ -477,29 +486,86 @@ const ChatBot = () => {
             }}
           >
             {/* Header */}
-            <div style={{ marginBottom: "1rem" }}>
-              <h1
+            <div style={{ marginBottom: "1rem", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div>
+                <h1
+                  style={{
+                    fontFamily: "'Space Grotesk', sans-serif",
+                    fontSize: "1.5rem",
+                    fontWeight: 800,
+                    color: t.headerText,
+                    transition: "color 0.3s ease",
+                  }}
+                >
+                  ChemFriend 😊
+                </h1>
+                <p
+                  style={{
+                    fontFamily: "'Space Grotesk', sans-serif",
+                    fontSize: "0.8rem",
+                    color: t.headerSub,
+                    marginTop: "0.15rem",
+                    transition: "color 0.3s ease",
+                  }}
+                >
+                  Your AI chemistry assistant — ask anything!
+                </p>
+              </div>
+
+              {/* AI Model Toggle */}
+              <div
+                id="model-selector"
                 style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0",
+                  background: t.toggleBg,
+                  border: `1px solid ${t.toggleBorder}`,
+                  borderRadius: "12px",
+                  padding: "4px",
                   fontFamily: "'Space Grotesk', sans-serif",
-                  fontSize: "1.5rem",
-                  fontWeight: 800,
-                  color: t.headerText,
-                  transition: "color 0.3s ease",
+                  transition: "all 0.3s ease",
                 }}
               >
-                ChemFriend 😊
-              </h1>
-              <p
-                style={{
-                  fontFamily: "'Space Grotesk', sans-serif",
-                  fontSize: "0.8rem",
-                  color: t.headerSub,
-                  marginTop: "0.15rem",
-                  transition: "color 0.3s ease",
-                }}
-              >
-                Your AI chemistry assistant — ask anything!
-              </p>
+                <button
+                  id="model-gemini-btn"
+                  onClick={() => setSelectedModel("gemini")}
+                  style={{
+                    padding: "6px 14px",
+                    borderRadius: "9px",
+                    border: "none",
+                    fontSize: "0.75rem",
+                    fontWeight: 700,
+                    fontFamily: "'Space Grotesk', sans-serif",
+                    cursor: "pointer",
+                    transition: "all 0.25s ease",
+                    background: selectedModel === "gemini" ? t.toggleActiveBg : "transparent",
+                    color: selectedModel === "gemini" ? t.toggleActiveText : t.toggleInactiveText,
+                    boxShadow: selectedModel === "gemini" ? "0 2px 8px rgba(0,0,0,0.15)" : "none",
+                  }}
+                >
+                  Model 1✨
+                </button>
+                <button
+                  id="model-llama-btn"
+                  onClick={() => setSelectedModel("llama")}
+                  style={{
+                    padding: "6px 14px",
+                    borderRadius: "9px",
+                    border: "none",
+                    fontSize: "0.75rem",
+                    fontWeight: 700,
+                    fontFamily: "'Space Grotesk', sans-serif",
+                    cursor: "pointer",
+                    transition: "all 0.25s ease",
+                    background: selectedModel === "llama" ? t.toggleActiveBg : "transparent",
+                    color: selectedModel === "llama" ? t.toggleActiveText : t.toggleInactiveText,
+                    boxShadow: selectedModel === "llama" ? "0 2px 8px rgba(0,0,0,0.15)" : "none",
+                  }}
+                >
+                  Model 2✨
+                </button>
+              </div>
             </div>
 
             {/* Chat Box */}
@@ -545,15 +611,15 @@ const ChatBot = () => {
                           transition: "all 0.3s ease",
                           ...(msg.role === "user"
                             ? {
-                                background: t.userBg,
-                                color: t.userText,
-                                boxShadow: t.userShadow,
-                              }
+                              background: t.userBg,
+                              color: t.userText,
+                              boxShadow: t.userShadow,
+                            }
                             : {
-                                background: t.aiBg,
-                                border: `1px solid ${t.aiBorder}`,
-                                color: t.aiText,
-                              }),
+                              background: t.aiBg,
+                              border: `1px solid ${t.aiBorder}`,
+                              color: t.aiText,
+                            }),
                         }}
                       >
                         {msg.role === "ai" && (
@@ -568,7 +634,7 @@ const ChatBot = () => {
                               marginBottom: "0.25rem",
                             }}
                           >
-                            ChemFriend
+                            ChemFriend {msg.model === "llama" ? "🦙" : msg.model === "gemini" ? "✨" : ""}
                           </span>
                         )}
                         <div style={{ whiteSpace: "pre-wrap" }}>{msg.text}</div>
