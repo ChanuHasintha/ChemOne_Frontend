@@ -8,7 +8,11 @@ import {
   FiFileText, 
   FiCheckCircle, 
   FiLoader, 
-  FiAlertCircle 
+  FiAlertCircle,
+  FiLock,
+  FiArrowRight,
+  FiEye,
+  FiEyeOff
 } from "react-icons/fi";
 
 const ManageKnowledge = () => {
@@ -16,6 +20,10 @@ const ManageKnowledge = () => {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [secretKeyInput, setSecretKeyInput] = useState("");
+  const [error, setError] = useState("");
+  const [showKey, setShowKey] = useState(false);
 
   const fetchKnowledge = async () => {
     try {
@@ -106,6 +114,16 @@ const ManageKnowledge = () => {
     }
   };
 
+  const handleSecretSubmit = (e) => {
+    e.preventDefault();
+    if (secretKeyInput === "deshxchaz@2001") {
+      setIsAuthorized(true);
+      setError("");
+    } else {
+      setError("Invalid secret key. Access denied.");
+    }
+  };
+
   const getStatusBadge = (status) => {
     switch (status) {
       case "ready":
@@ -120,6 +138,60 @@ const ManageKnowledge = () => {
         return <span>{status}</span>;
     }
   };
+
+  if (!isAuthorized) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <AdminNavbar />
+        <div className="max-w-md mx-auto mt-20 p-8 bg-white rounded-2xl shadow-xl border border-gray-100">
+          <div className="flex flex-col items-center text-center">
+            <div className="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mb-6">
+              <FiLock size={32} />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Restricted Access</h2>
+            <p className="text-gray-500 mb-8">Please enter the secret key to manage the knowledge base.</p>
+            
+            <form onSubmit={handleSecretSubmit} className="w-full">
+              <div className="relative mb-4">
+                <input
+                  type={showKey ? "text" : "password"}
+                  placeholder="Enter secret key..."
+                  className={`w-full px-4 py-3 pr-12 bg-gray-50 border rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all text-gray-900 ${
+                    error ? "border-red-300 ring-2 ring-red-100" : "border-gray-200"
+                  }`}
+                  value={secretKeyInput}
+                  onChange={(e) => setSecretKeyInput(e.target.value)}
+                  autoFocus
+                />
+                <button
+                  type="button"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  onClick={() => setShowKey(!showKey)}
+                >
+                  {showKey ? <FiEyeOff size={20} /> : <FiEye size={20} />}
+                </button>
+              </div>
+              
+              {error && (
+                <div className="flex items-center gap-2 text-red-500 text-sm mb-4 justify-center">
+                  <FiAlertCircle size={14} />
+                  <span>{error}</span>
+                </div>
+              )}
+              
+              <button
+                type="submit"
+                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl transition-all flex items-center justify-center gap-2 group"
+              >
+                Access Knowledge Base
+                <FiArrowRight className="group-hover:translate-x-1 transition-transform" />
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
