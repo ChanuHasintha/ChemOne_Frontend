@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { API } from "../services/api";
 import { useNavigate } from "react-router-dom";
@@ -26,6 +26,18 @@ export default function Login() {
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
+  useEffect(() => {
+    const user = JSON.parse(sessionStorage.getItem("user") || "null");
+    const token = sessionStorage.getItem("token");
+    if (token && user) {
+      if (user.role === "instructor") {
+        navigate("/admin");
+      } else {
+        navigate("/student");
+      }
+    }
+  }, [navigate]);
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     if (error) setError("");
@@ -38,8 +50,8 @@ export default function Login() {
 
     try {
       const res = await axios.post(`${API}/api/auth/login`, formData);
-      localStorage.setItem("token", res.data.token);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
+      sessionStorage.setItem("token", res.data.token);
+      sessionStorage.setItem("user", JSON.stringify(res.data.user));
       if (res.data.user.role === "instructor") {
         navigate("/admin");
       } else {
@@ -53,8 +65,8 @@ export default function Login() {
   };
 
   const handleGuestLogin = () => {
-    localStorage.setItem("token", "guest-token");
-    localStorage.setItem("user", JSON.stringify({ name: "Guest User", role: "guest", email: "guest@chembridge.com" }));
+    sessionStorage.setItem("token", "guest-token");
+    sessionStorage.setItem("user", JSON.stringify({ name: "Guest User", role: "guest", email: "guest@chembridge.com" }));
     navigate("/student");
   };
 
