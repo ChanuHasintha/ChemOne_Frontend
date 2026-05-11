@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import StudentNavbar from '../../components/StudentNavbar';
 import API from '../../services/api';
-import { Trophy, X, Medal } from 'lucide-react';
+import { Trophy, X, Medal, Beaker, Zap } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
-// --- ප්‍රශ්න 100 ක බැංකුව ---
+// --- DATA: CHEM BATTLE 100 ---
 const TOTAL_QUESTIONS = [
     { q: "ප්‍රබල අම්ලයක pH අගය කීයද?", a: "1-3", b: "11-14", correct: "a", effect: "ACID" },
     { q: "සෘණ ආරෝපණයක් සහිත අංශුව කුමක්ද?", a: "ප්‍රෝටෝනය", b: "ඉලෙක්ට්‍රෝනය", correct: "b", effect: "SHOCK" },
@@ -114,7 +114,81 @@ const MEME_QUOTES = {
     right: ["අම්මෝ ඒක! 🔥", "සුපිරි වැඩක්!", "හරියටම හරි!", "වැඩ්ඩෙක් තමයි!", "Full Marks!", "සයන්ස් වැඩ්ඩෙක්!", "Boom! Correct!"]
 };
 
-export default function ChemBattle100() {
+// --- DATA: LAB GAME ---
+const REACTIONS_DATABASE = [
+    { a: 'Na', b: 'H2O', res: 'BOOM!', meme: '💥 බුම්මාතේ!', sound: 'අඩෝ සෝඩියම් වතුරට දැම්මේ කවුද?!', type: 'danger' },
+    { a: 'HCl', b: 'NaOH', res: 'Neutral', meme: '🧂 ලුණුයි වතුරයි!', sound: 'ශාන්ති ශාන්ති... නියමයි පුතා.', type: 'safe' },
+    { a: 'H2SO4', b: 'Sugar', res: 'Snake', meme: '🐍 කළු සර්පයා!', sound: 'සීනි ටික කර කරගත්තා නේද?', type: 'funny' },
+    { a: 'K', b: 'H2O', res: 'Lilac Fire', meme: '🔥 පර්පල් ගින්දර!', sound: 'ලැබ් එක ඉවරයි! දුවපන්!', type: 'danger' },
+    { a: 'NH3', b: 'HCl', res: 'Smoke', meme: '☁️ සුදු දුම් මකරා!', sound: 'ඇමෝනියම් ක්ලෝරයිඩ් දුම බලන්න.', type: 'funny' },
+    { a: 'Pb(NO3)2', b: 'KI', res: 'Gold', meme: '✨ රත්තරන් වැස්සක්!', sound: 'ෂා... මේක නම් මැජික් එකක් වගේ.', type: 'safe' },
+    { a: 'Cu', b: 'HNO3', res: 'Toxic', meme: '🧪 දුඹුරු වලාකුළ!', sound: 'ඕක ආග්රහණය කරන්න එපා ඕයි!', type: 'danger' },
+    { a: 'Mg', b: 'O2', res: 'Flash', meme: '😎 ඇස් පේන්නෑ!', sound: 'මැග්නීසියම් පීත්ත පටිය දිහා බලන්න එපා කිව්වා නේද?', type: 'funny' },
+    { a: 'Phenol', b: 'Base', res: 'Pink', meme: '🌸 තද රෝස පාටයි!', sound: 'ෆීනොප්තලීන් දැම්මම ලස්සනයි නේද?', type: 'safe' },
+    { a: 'AgNO3', b: 'NH4OH', res: 'Mirror', meme: '🪞 මූණ පේනවා!', sound: 'ටොලන්ස් පරීක්ෂණය හරියටම කළා.', type: 'safe' },
+    { a: 'Ethanol', b: 'H2SO4', res: 'Gas', meme: '🎈 එතීන් වායුව!', sound: 'එතීන් හැදෙන සුවඳ එනවා.', type: 'safe' },
+    { a: 'Phone', b: 'H2SO4', res: 'Dead', meme: '📱 ෆෝන් එක ඉවරයි!', sound: 'කවුද ඕයි ෆෝන් එක ඇසිඩ් එකට දැම්මේ?', type: 'funny' },
+];
+
+// --- REUSABLE COMPONENTS ---
+
+const LeaderboardModal = ({ show, onClose, data, loading, gameTitle }) => (
+    <AnimatePresence>
+        {show && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
+                <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-slate-900 border-2 border-yellow-500/50 w-full max-w-lg rounded-3xl overflow-hidden relative z-10 shadow-2xl">
+                    <div className="bg-yellow-500 p-6 flex justify-between items-center">
+                        <h2 className="text-black font-black text-2xl flex items-center gap-2">
+                            <Trophy size={28} />
+                            {gameTitle} TOP 10
+                        </h2>
+                        <button onClick={onClose} className="bg-black/20 hover:bg-black/40 p-2 rounded-full transition-all">
+                            <X size={24} className="text-black" />
+                        </button>
+                    </div>
+                    <div className="p-6 max-h-[60vh] overflow-y-auto">
+                        {loading ? (
+                            <div className="text-center py-20 text-slate-400">පූරණය වෙමින්...</div>
+                        ) : data.length > 0 ? (
+                            <div className="space-y-3">
+                                {data.map((entry, index) => (
+                                    <div key={index} className={`flex items-center justify-between p-4 rounded-2xl border ${index === 0 ? 'bg-yellow-500/10 border-yellow-500' : 'bg-slate-800/50 border-slate-700'}`}>
+                                        <div className="flex items-center gap-4">
+                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-black ${index === 0 ? 'bg-yellow-500 text-black' : index === 1 ? 'bg-slate-300 text-black' : index === 2 ? 'bg-amber-600 text-white' : 'bg-slate-700 text-slate-400'}`}>
+                                                {index + 1}
+                                            </div>
+                                            <div>
+                                                <p className="font-bold text-white">{entry.student?.name || "Unknown Scientist"}</p>
+                                                <p className="text-xs text-slate-400">Batch: {entry.student?.batch || "N/A"}</p>
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-2xl font-black text-yellow-400">{entry.score}{gameTitle.includes('LAB') ? '' : '%'}</p>
+                                            <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">{gameTitle.includes('LAB') ? 'Points' : 'Victory'}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="text-center py-20">
+                                <div className="text-5xl mb-4 opacity-20">🧪</div>
+                                <p className="text-slate-500 font-medium italic">තවමත් වාර්තා තබා නැත. පළමු වැන්නා වන්න!</p>
+                            </div>
+                        )}
+                    </div>
+                    <div className="bg-slate-800/50 p-4 text-center border-t border-slate-800">
+                        <p className="text-xs text-slate-500 font-mono italic">මෙම මාසයේ හොඳම දක්ෂතා පමණක් පෙන්වයි</p>
+                    </div>
+                </motion.div>
+            </div>
+        )}
+    </AnimatePresence>
+);
+
+// --- GAME: CHEM BATTLE 100 ---
+
+const ChemBattle100 = ({ onOpenLeaderboard }) => {
     const [gameState, setGameState] = useState('START');
     const [sessionQuestions, setSessionQuestions] = useState([]);
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -122,39 +196,14 @@ export default function ChemBattle100() {
     const [enemyHP, setEnemyHP] = useState(100);
     const [feedback, setFeedback] = useState("");
     const [animTrigger, setAnimTrigger] = useState(null);
-    const [leaderboard, setLeaderboard] = useState([]);
-    const [showLeaderboard, setShowLeaderboard] = useState(false);
-    const [loadingLeaderboard, setLoadingLeaderboard] = useState(false);
 
-    // Fetch Leaderboard
-    const fetchLeaderboard = async () => {
-        setLoadingLeaderboard(true);
-        try {
-            const res = await API.get('/games/leaderboard/chembattle');
-            setLeaderboard(res.data);
-            setShowLeaderboard(true);
-        } catch (error) {
-            console.error("Error fetching leaderboard", error);
-            toast.error("Leaderboard එක ලබා ගැනීමට නොහැකි වුණා.");
-        } finally {
-            setLoadingLeaderboard(false);
-        }
-    };
-
-    // Submit Score
     const submitScore = async (finalScore) => {
         try {
-            await API.post('/games/score', {
-                game: 'chembattle',
-                score: finalScore
-            });
+            await API.post('/games/score', { game: 'chembattle', score: finalScore });
             toast.success("ඔබේ ලකුණු සටහන් කර ගත්තා!");
-        } catch (error) {
-            console.error("Error submitting score", error);
-        }
+        } catch (error) { console.error("Error submitting score", error); }
     };
 
-    // නව වටයක් ආරම්භ කරන විට අහඹු ලෙස ප්‍රශ්න 10ක් තෝරා ගැනීම
     const startNewGame = () => {
         const shuffled = [...TOTAL_QUESTIONS].sort(() => 0.5 - Math.random());
         setSessionQuestions(shuffled.slice(0, 10));
@@ -167,7 +216,6 @@ export default function ChemBattle100() {
 
     const handleAnswer = (choice) => {
         if (gameState !== 'PLAYING') return;
-
         const currentQ = sessionQuestions[currentIndex];
         let nextPlayerHP = playerHP;
         let nextEnemyHP = enemyHP;
@@ -197,157 +245,309 @@ export default function ChemBattle100() {
     };
 
     return (
-        <>
-            <StudentNavbar />
-            <div className="min-h-screen bg-slate-950 text-white font-sans flex flex-col items-center justify-center p-4">
-
-                {/* HUD Header */}
-                <div className="w-full max-w-4xl flex justify-between items-center mb-6 bg-slate-900 p-4 rounded-xl border border-slate-800">
-                    <h1 className="text-xl font-black text-yellow-400">CHEM-BATTLE: 100 Q-BANK</h1>
-                    <div className="bg-blue-600/20 px-4 py-1 rounded-full border border-blue-500 text-sm">
-                        ප්‍රශ්නය: <span className="text-white font-bold">{currentIndex + 1} / 10</span>
-                    </div>
+        <div className="w-full flex flex-col items-center">
+            {/* HUD Header */}
+            <div className="w-full max-w-4xl flex justify-between items-center mb-6 bg-slate-900 p-4 rounded-xl border border-slate-800">
+                <h1 className="text-xl font-black text-yellow-400">CHEM-BATTLE: 100 Q-BANK</h1>
+                <div className="bg-blue-600/20 px-4 py-1 rounded-full border border-blue-500 text-sm">
+                    ප්‍රශ්නය: <span className="text-white font-bold">{gameState === 'PLAYING' ? currentIndex + 1 : 0} / 10</span>
                 </div>
-
-                {gameState === 'START' ? (
-                    <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="text-center">
-                        <p className="mb-6 text-slate-400">ප්‍රශ්න 100න් අහඹු 10කට මුහුණ දෙන්න සූදානම්ද?</p>
-                        <div className="flex flex-col gap-4 items-center">
-                            <button onClick={startNewGame} className="bg-yellow-500 text-black px-12 py-5 rounded-2xl font-black text-3xl shadow-[0_8px_0_rgb(161,98,7)] hover:translate-y-1 hover:shadow-[0_4px_0_rgb(161,98,7)] transition-all">
-                                Start Challenge
-                            </button>
-                            <button onClick={fetchLeaderboard} disabled={loadingLeaderboard} className="flex items-center gap-2 text-yellow-400 hover:text-yellow-300 font-bold transition-all">
-                                <Trophy size={20} />
-                                {loadingLeaderboard ? "පූරණය වෙමින්..." : "Leaderboard එක බලන්න"}
-                            </button>
-                        </div>
-                    </motion.div>
-                ) : gameState === 'PLAYING' ? (
-                    <div className="w-full max-w-4xl relative">
-
-                        {/* Health Section */}
-                        <div className="grid grid-cols-2 gap-8 mb-10">
-                            <motion.div animate={animTrigger === 'FAIL' ? { x: [-5, 5, -5, 5, 0] } : {}} className="relative">
-                                <div className="flex justify-between mb-1 text-xs font-bold text-green-400"><span>ඔබ</span><span>{playerHP}%</span></div>
-                                <div className="h-4 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
-                                    <motion.div animate={{ width: `${playerHP}%` }} className="h-full bg-green-500 shadow-[0_0_15px_rgba(34,197,94,0.5)]" />
-                                </div>
-                                <div className="text-7xl mt-4 text-center">🧑‍🔬</div>
-                            </motion.div>
-
-                            <motion.div animate={['ACID', 'SHOCK', 'BOOM'].includes(animTrigger) ? { scale: [1, 1.1, 1], rotate: [0, 5, -5, 0] } : {}} className="relative">
-                                <div className="flex justify-between mb-1 text-xs font-bold text-red-500"><span>සතුරා</span><span>{enemyHP}%</span></div>
-                                <div className="h-4 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
-                                    <motion.div animate={{ width: `${enemyHP}%` }} className="h-full bg-red-600 shadow-[0_0_15px_rgba(220,38,38,0.5)]" />
-                                </div>
-                                <div className="text-7xl mt-4 text-center relative">
-                                    🧛‍♂️
-                                    {animTrigger === 'ACID' && <motion.span initial={{ y: -30 }} animate={{ y: 30, opacity: 0 }} className="absolute inset-0 text-5xl">🧪</motion.span>}
-                                    {animTrigger === 'SHOCK' && <motion.span animate={{ opacity: [0, 1, 0] }} className="absolute inset-0 text-cyan-400">⚡</motion.span>}
-                                    {animTrigger === 'BOOM' && <motion.span animate={{ scale: [0, 2.5], opacity: [1, 0] }} className="absolute inset-0 text-orange-500">💥</motion.span>}
-                                </div>
-                            </motion.div>
-                        </div>
-
-                        {/* Feedback Popup */}
-                        <AnimatePresence>
-                            {animTrigger && (
-                                <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ opacity: 0 }} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-none">
-                                    <div className="bg-yellow-400 text-black px-8 py-3 rounded-lg font-black text-3xl shadow-2xl -rotate-2 border-4 border-black">
-                                        {feedback}
-                                    </div>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-
-                        {/* Question Card */}
-                        <div className="bg-slate-900/80 backdrop-blur-md p-10 rounded-[2rem] border-2 border-slate-800 shadow-2xl relative overflow-hidden">
-                            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-yellow-500 to-transparent opacity-50"></div>
-                            <h2 className="text-2xl font-bold text-center mb-10 leading-snug">
-                                {sessionQuestions[currentIndex]?.q}
-                            </h2>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                <button onClick={() => handleAnswer('a')} className="bg-slate-800 hover:bg-yellow-500 hover:text-black p-6 rounded-2xl font-bold text-xl transition-all active:scale-95 border-b-4 border-black">
-                                    {sessionQuestions[currentIndex]?.a}
-                                </button>
-                                <button onClick={() => handleAnswer('b')} className="bg-slate-800 hover:bg-yellow-500 hover:text-black p-6 rounded-2xl font-bold text-xl transition-all active:scale-95 border-b-4 border-black">
-                                    {sessionQuestions[currentIndex]?.b}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                ) : (
-                    /* Game Over */
-                    <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="bg-slate-900 p-12 rounded-[3rem] border-4 border-yellow-500 text-center shadow-2xl max-w-lg w-full">
-                        <h2 className="text-5xl font-black mb-4 text-white uppercase tracking-tighter">
-                            {playerHP > 0 && enemyHP === 0 ? "You Won! 🏆" : "Defeated! 💀"}
-                        </h2>
-                        <p className="text-slate-400 mb-8 font-medium">අවසන් ප්‍රතිඵලය: {100 - enemyHP}% ක ජයක්!</p>
-                        <div className="flex flex-col gap-3">
-                            <button onClick={startNewGame} className="bg-white text-black px-12 py-4 rounded-full font-black text-xl hover:bg-yellow-400 transition-all shadow-lg active:scale-90 w-full">
-                                Play Again
-                            </button>
-                            <button onClick={fetchLeaderboard} className="bg-slate-800 text-yellow-400 px-12 py-4 rounded-full font-bold text-lg hover:bg-slate-700 transition-all border border-slate-700 w-full flex items-center justify-center gap-2">
-                                <Trophy size={20} />
-                                Leaderboard
-                            </button>
-                        </div>
-                    </motion.div>
-                )}
-
-                <div className="mt-10 text-slate-600 text-xs font-mono">ChemBridge MEME ENGINE • Q-BANK V1.0</div>
             </div>
 
-            {/* Leaderboard Modal */}
-            <AnimatePresence>
-                {showLeaderboard && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowLeaderboard(false)} className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
-                        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-slate-900 border-2 border-yellow-500/50 w-full max-w-lg rounded-3xl overflow-hidden relative z-10 shadow-2xl">
-                            <div className="bg-yellow-500 p-6 flex justify-between items-center">
-                                <h2 className="text-black font-black text-2xl flex items-center gap-2">
-                                    <Trophy size={28} />
-                                    TOP 10 SCIENTISTS
-                                </h2>
-                                <button onClick={() => setShowLeaderboard(false)} className="bg-black/20 hover:bg-black/40 p-2 rounded-full transition-all">
-                                    <X size={24} className="text-black" />
-                                </button>
+            {gameState === 'START' ? (
+                <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="text-center py-10">
+                    <div className="text-6xl mb-4">🧪</div>
+                    <p className="mb-6 text-slate-400">ප්‍රශ්න 100න් අහඹු 10කට මුහුණ දෙන්න සූදානම්ද?</p>
+                    <div className="flex flex-col gap-4 items-center">
+                        <button onClick={startNewGame} className="bg-yellow-500 text-black px-12 py-5 rounded-2xl font-black text-3xl shadow-[0_8px_0_rgb(161,98,7)] hover:translate-y-1 hover:shadow-[0_4px_0_rgb(161,98,7)] transition-all">
+                            Start Challenge
+                        </button>
+                        <button onClick={() => onOpenLeaderboard('chembattle')} className="flex items-center gap-2 text-yellow-400 hover:text-yellow-300 font-bold transition-all">
+                            <Trophy size={20} />
+                            Leaderboard එක බලන්න
+                        </button>
+                    </div>
+                </motion.div>
+            ) : gameState === 'PLAYING' ? (
+                <div className="w-full max-w-4xl relative">
+                    {/* Health Section */}
+                    <div className="grid grid-cols-2 gap-8 mb-10">
+                        <motion.div animate={animTrigger === 'FAIL' ? { x: [-5, 5, -5, 5, 0] } : {}} className="relative">
+                            <div className="flex justify-between mb-1 text-xs font-bold text-green-400"><span>ඔබ</span><span>{playerHP}%</span></div>
+                            <div className="h-4 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
+                                <motion.div animate={{ width: `${playerHP}%` }} className="h-full bg-green-500 shadow-[0_0_15px_rgba(34,197,94,0.5)]" />
                             </div>
-                            <div className="p-6 max-h-[60vh] overflow-y-auto">
-                                {leaderboard.length > 0 ? (
-                                    <div className="space-y-3">
-                                        {leaderboard.map((entry, index) => (
-                                            <div key={index} className={`flex items-center justify-between p-4 rounded-2xl border ${index === 0 ? 'bg-yellow-500/10 border-yellow-500' : 'bg-slate-800/50 border-slate-700'}`}>
-                                                <div className="flex items-center gap-4">
-                                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-black ${index === 0 ? 'bg-yellow-500 text-black' : index === 1 ? 'bg-slate-300 text-black' : index === 2 ? 'bg-amber-600 text-white' : 'bg-slate-700 text-slate-400'}`}>
-                                                        {index + 1}
-                                                    </div>
-                                                    <div>
-                                                        <p className="font-bold text-white">{entry.student?.name || "Unknown Scientist"}</p>
-                                                        <p className="text-xs text-slate-400">Batch: {entry.student?.batch || "N/A"}</p>
-                                                    </div>
-                                                </div>
-                                                <div className="text-right">
-                                                    <p className="text-2xl font-black text-yellow-400">{entry.score}%</p>
-                                                    <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Victory</p>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <div className="text-center py-20">
-                                        <div className="text-5xl mb-4 opacity-20">🧪</div>
-                                        <p className="text-slate-500 font-medium italic">තවමත් වාර්තා තබා නැත. පළමු වැන්නා වන්න!</p>
-                                    </div>
-                                )}
+                            <div className="text-7xl mt-4 text-center">🧑‍🔬</div>
+                        </motion.div>
+
+                        <motion.div animate={['ACID', 'SHOCK', 'BOOM'].includes(animTrigger) ? { scale: [1, 1.1, 1], rotate: [0, 5, -5, 0] } : {}} className="relative">
+                            <div className="flex justify-between mb-1 text-xs font-bold text-red-500"><span>සතුරා</span><span>{enemyHP}%</span></div>
+                            <div className="h-4 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
+                                <motion.div animate={{ width: `${enemyHP}%` }} className="h-full bg-red-600 shadow-[0_0_15px_rgba(220,38,38,0.5)]" />
                             </div>
-                            <div className="bg-slate-800/50 p-4 text-center border-t border-slate-800">
-                                <p className="text-xs text-slate-500 font-mono italic">මෙම මාසයේ හොඳම දක්ෂතා පමණක් පෙන්වයි</p>
+                            <div className="text-7xl mt-4 text-center relative">
+                                🧛‍♂️
+                                {animTrigger === 'ACID' && <motion.span initial={{ y: -30 }} animate={{ y: 30, opacity: 0 }} className="absolute inset-0 text-5xl">🧪</motion.span>}
+                                {animTrigger === 'SHOCK' && <motion.span animate={{ opacity: [0, 1, 0] }} className="absolute inset-0 text-cyan-400">⚡</motion.span>}
+                                {animTrigger === 'BOOM' && <motion.span animate={{ scale: [0, 2.5], opacity: [1, 0] }} className="absolute inset-0 text-orange-500">💥</motion.span>}
                             </div>
                         </motion.div>
                     </div>
+
+                    <AnimatePresence>
+                        {animTrigger && (
+                            <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ opacity: 0 }} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-none">
+                                <div className="bg-yellow-400 text-black px-8 py-3 rounded-lg font-black text-3xl shadow-2xl -rotate-2 border-4 border-black">
+                                    {feedback}
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
+                    {/* Question Card */}
+                    <div className="bg-slate-900/80 backdrop-blur-md p-10 rounded-[2rem] border-2 border-slate-800 shadow-2xl relative overflow-hidden">
+                        <h2 className="text-2xl font-bold text-center mb-10 leading-snug">{sessionQuestions[currentIndex]?.q}</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <button onClick={() => handleAnswer('a')} className="bg-slate-800 hover:bg-yellow-500 hover:text-black p-6 rounded-2xl font-bold text-xl transition-all active:scale-95 border-b-4 border-black">
+                                {sessionQuestions[currentIndex]?.a}
+                            </button>
+                            <button onClick={() => handleAnswer('b')} className="bg-slate-800 hover:bg-yellow-500 hover:text-black p-6 rounded-2xl font-bold text-xl transition-all active:scale-95 border-b-4 border-black">
+                                {sessionQuestions[currentIndex]?.b}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            ) : (
+                <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="bg-slate-900 p-12 rounded-[3rem] border-4 border-yellow-500 text-center shadow-2xl max-w-lg w-full">
+                    <h2 className="text-5xl font-black mb-4 text-white uppercase tracking-tighter">{playerHP > 0 && enemyHP === 0 ? "You Won! 🏆" : "Defeated! 💀"}</h2>
+                    <p className="text-slate-400 mb-8 font-medium">අවසන් ප්‍රතිඵලය: {100 - enemyHP}% ක ජයක්!</p>
+                    <div className="flex flex-col gap-3">
+                        <button onClick={startNewGame} className="bg-white text-black px-12 py-4 rounded-full font-black text-xl hover:bg-yellow-400 transition-all shadow-lg active:scale-90 w-full">Play Again</button>
+                        <button onClick={() => onOpenLeaderboard('chembattle')} className="bg-slate-800 text-yellow-400 px-12 py-4 rounded-full font-bold text-lg hover:bg-slate-700 transition-all border border-slate-700 w-full flex items-center justify-center gap-2">
+                            <Trophy size={20} /> Leaderboard
+                        </button>
+                    </div>
+                </motion.div>
+            )}
+        </div>
+    );
+};
+
+// --- GAME: LAB GAME ---
+
+const LabGame = ({ onOpenLeaderboard }) => {
+    const [score, setScore] = useState(0);
+    const [timeLeft, setTimeLeft] = useState(45);
+    const [currentOptions, setCurrentOptions] = useState([]);
+    const [reaction, setReaction] = useState(null);
+    const [isGameOver, setIsGameOver] = useState(false);
+    const [shake, setShake] = useState(false);
+
+    const generateOptions = useCallback(() => {
+        const shuffled = [...REACTIONS_DATABASE].sort(() => 0.5 - Math.random());
+        setCurrentOptions(shuffled.slice(0, 4));
+    }, []);
+
+    useEffect(() => { generateOptions(); }, [generateOptions]);
+
+    useEffect(() => {
+        if (timeLeft > 0 && !isGameOver) {
+            const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
+            return () => clearTimeout(timer);
+        } else if (timeLeft === 0 && !isGameOver) {
+            setIsGameOver(true);
+            if (score > 0) submitScore(score);
+        }
+    }, [timeLeft, isGameOver]);
+
+    const submitScore = async (finalScore) => {
+        try {
+            await API.post('/games/score', { game: 'labgame', score: finalScore });
+            toast.success("ලකුණු සටහන් කර ගත්තා!");
+        } catch (error) { console.error("Error submitting score", error); }
+    };
+
+    const handleMix = (mix) => {
+        setReaction(mix);
+        if (mix.type === 'danger') {
+            setScore(prev => prev - 20);
+            setShake(true);
+            setTimeout(() => setShake(false), 500);
+        } else {
+            setScore(prev => prev + 10);
+        }
+        setTimeout(() => {
+            setReaction(null);
+            generateOptions();
+        }, 2000);
+    };
+
+    const resetGame = () => {
+        setScore(0);
+        setTimeLeft(45);
+        setIsGameOver(false);
+        setReaction(null);
+        generateOptions();
+    };
+
+    return (
+        <div className={`w-full max-w-xl flex flex-col items-center p-6 rounded-3xl transition-all duration-300 ${shake ? 'bg-red-900/40 shadow-[0_0_50px_rgba(239,68,68,0.3)]' : 'bg-slate-900/60 border border-slate-800'}`}>
+            <div className="w-full flex justify-between items-center mb-6 bg-slate-950/50 p-4 rounded-xl border border-white/5">
+                <div>
+                    <p className="text-[10px] text-slate-500 uppercase tracking-widest">Score</p>
+                    <p className={`text-2xl font-black ${score >= 0 ? 'text-green-400' : 'text-red-500'}`}>{score}</p>
+                </div>
+                <div className="text-center">
+                    <h1 className="text-xl font-bold text-yellow-500">🧪 ලැබ් අමාරුව</h1>
+                    <p className="text-[10px] text-slate-500">A/L CHEMISTRY CHAOS</p>
+                </div>
+                <div className="text-right">
+                    <p className="text-[10px] text-slate-400 uppercase tracking-widest">Time</p>
+                    <p className={`text-2xl font-black ${timeLeft < 10 ? 'text-red-500 animate-pulse' : 'text-white'}`}>{timeLeft}s</p>
+                </div>
+            </div>
+
+            <div className={`w-full aspect-video rounded-3xl border-4 transition-all duration-300 flex flex-col items-center justify-center relative shadow-2xl ${
+                reaction?.type === 'danger' ? 'border-red-500 bg-red-950/50' : 
+                reaction?.type === 'safe' ? 'border-green-500 bg-green-950/50' : 
+                'border-slate-700 bg-slate-950'
+            }`}>
+                {reaction ? (
+                    <div className="text-center animate-bounce">
+                        <span className="text-7xl block mb-2">{reaction.meme.split(' ')[0]}</span>
+                        <h2 className="text-2xl font-black uppercase tracking-tighter">{reaction.meme}</h2>
+                    </div>
+                ) : (
+                    <div className="text-center opacity-40">
+                        <div className="flex gap-4 justify-center mb-4">
+                            <div className="w-8 h-12 border-2 border-white rounded-b-lg animate-pulse"></div>
+                            <div className="w-8 h-12 border-2 border-white rounded-b-lg animate-pulse delay-75"></div>
+                        </div>
+                        <p className="text-sm font-medium">මික්ස් කරන්න එකක් තෝරන්න...</p>
+                    </div>
                 )}
-            </AnimatePresence>
-        </>
+            </div>
+
+            <div className="w-full mt-4 bg-blue-600/10 border-l-4 border-blue-500 p-4 rounded-r-xl">
+                <p className="text-blue-400 text-sm font-bold italic">
+                    Sir: <span className="text-blue-100">"{reaction ? reaction.sound : 'ලැබ් එක පුපුරවගන්නේ නැතුව වැඩ කරපන් ළමයෝ!'}"</span>
+                </p>
+            </div>
+
+            <div className="w-full mt-6 grid grid-cols-2 gap-3">
+                {currentOptions.map((opt, idx) => (
+                    <button
+                        key={idx}
+                        disabled={reaction || isGameOver}
+                        onClick={() => handleMix(opt)}
+                        className="group relative bg-slate-800 hover:bg-yellow-500 transition-all p-4 rounded-xl border-b-4 border-black active:border-b-0 active:translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        <span className="block text-xs text-slate-400 group-hover:text-black font-bold uppercase mb-1">Reaction {idx + 1}</span>
+                        <span className="block text-lg font-black group-hover:text-black whitespace-nowrap">{opt.a} + {opt.b}</span>
+                    </button>
+                ))}
+            </div>
+
+            <button onClick={() => onOpenLeaderboard('labgame')} className="mt-6 flex items-center gap-2 text-yellow-400 hover:text-yellow-300 font-bold transition-all text-sm">
+                <Trophy size={16} /> Leaderboard
+            </button>
+
+            {isGameOver && (
+                <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex flex-col items-center justify-center z-50 p-6 text-center">
+                    <h2 className="text-6xl font-black text-red-600 mb-2 italic">Game Over!</h2>
+                    <p className="text-2xl mb-6 text-white">ඔයාගේ ලකුණු ප්‍රමාණය: <span className="text-yellow-400 font-bold">{score}</span></p>
+                    <div className="flex flex-col gap-4">
+                        <button onClick={resetGame} className="bg-white text-black px-12 py-4 rounded-full font-black text-xl hover:bg-yellow-500 transition-colors shadow-lg">Retry</button>
+                        <button onClick={() => onOpenLeaderboard('labgame')} className="text-yellow-500 font-bold underline">Leaderboard බලන්න</button>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+// --- MAIN GAMES PAGE ---
+
+export default function Games() {
+    const [activeTab, setActiveTab] = useState('BATTLE'); // BATTLE | LAB
+    const [showLeaderboard, setShowLeaderboard] = useState(false);
+    const [leaderboardData, setLeaderboardData] = useState([]);
+    const [loadingLeaderboard, setLoadingLeaderboard] = useState(false);
+    const [leaderboardGame, setLeaderboardGame] = useState('');
+
+    const fetchLeaderboard = async (game) => {
+        setLeaderboardGame(game === 'chembattle' ? 'CHEM BATTLE' : 'LAB CHAOS');
+        setLoadingLeaderboard(true);
+        setShowLeaderboard(true);
+        try {
+            const res = await API.get(`/games/leaderboard/${game}`);
+            setLeaderboardData(res.data);
+        } catch (error) {
+            console.error("Error fetching leaderboard", error);
+            toast.error("Leaderboard ලබා ගැනීමට නොහැකි වුණා.");
+        } finally {
+            setLoadingLeaderboard(false);
+        }
+    };
+
+    return (
+        <div className="min-h-screen bg-slate-950 text-white selection:bg-yellow-500 selection:text-black">
+            <StudentNavbar />
+            
+            <div className="max-w-6xl mx-auto px-4 py-10 flex flex-col items-center">
+                
+                {/* Game Switcher Tabs */}
+                <div className="flex bg-slate-900 p-1 rounded-2xl mb-12 border border-slate-800 shadow-xl">
+                    <button 
+                        onClick={() => setActiveTab('BATTLE')}
+                        className={`flex items-center gap-2 px-8 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'BATTLE' ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/20' : 'text-slate-400 hover:text-white'}`}
+                    >
+                        <Zap size={18} />
+                        Chem Battle 100
+                    </button>
+                    <button 
+                        onClick={() => setActiveTab('LAB')}
+                        className={`flex items-center gap-2 px-8 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'LAB' ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/20' : 'text-slate-400 hover:text-white'}`}
+                    >
+                        <Beaker size={18} />
+                        Lab Chaos
+                    </button>
+                </div>
+
+                <motion.div
+                    key={activeTab}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="w-full flex justify-center"
+                >
+                    {activeTab === 'BATTLE' ? (
+                        <ChemBattle100 onOpenLeaderboard={fetchLeaderboard} />
+                    ) : (
+                        <LabGame onOpenLeaderboard={fetchLeaderboard} />
+                    )}
+                </motion.div>
+
+                <div className="mt-16 text-slate-700 text-[10px] font-mono uppercase tracking-widest text-center">
+                    ChemBridge Arcade // Powered by Meme Engine v1.0
+                </div>
+            </div>
+
+            <LeaderboardModal 
+                show={showLeaderboard} 
+                onClose={() => setShowLeaderboard(false)} 
+                data={leaderboardData} 
+                loading={loadingLeaderboard} 
+                gameTitle={leaderboardGame}
+            />
+
+            <style>{`
+                @keyframes shake {
+                    0%, 100% { transform: translateX(0); }
+                    25% { transform: translateX(-5px); }
+                    75% { transform: translateX(5px); }
+                }
+                .shake-anim { animation: shake 0.2s ease-in-out infinite; }
+            `}</style>
+        </div>
     );
 }
